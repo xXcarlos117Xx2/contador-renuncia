@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cuenta Atrás - Majora Style</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+      flex-direction: column;
+    }
+    h1, h2 {
+      margin: 0.5em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="fase-dia">Amanecer del Primer Día</h1>
+  <h2 id="tiempo-restante">-Quedan 72:00 Horas-</h2>
+
+  <script>
+    const inicio = new Date("2025-06-04T00:00:00+02:00").getTime();
+    const final = new Date("2025-07-03T23:59:59+02:00").getTime();
+
+    const ordinales = {
+      1: "Primer",
+      2: "Segundo",
+      3: "Tercer",
+      4: "Cuarto",
+      5: "Quinto",
+      6: "Sexto",
+      7: "Séptimo",
+      8: "Octavo",
+      9: "Noveno",
+      10: "Décimo",
+      11: "Undécimo",
+      12: "Duodécimo",
+      13: "Decimotercer",
+      14: "Decimocuarto",
+      15: "Decimoquinto",
+      16: "Decimosexto",
+      17: "Decimoséptimo",
+      18: "Decimoctavo",
+      19: "Decimonoveno",
+      20: "Vigésimo",
+      21: "Vigésimo Primer",
+      22: "Vigésimo Segundo",
+      23: "Vigésimo Tercer",
+      24: "Vigésimo Cuarto",
+      25: "Vigésimo Quinto",
+      26: "Vigésimo Sexto",
+      27: "Vigésimo Séptimo",
+      28: "Vigésimo Octavo",
+      29: "Vigésimo Noveno"
+    };
+
+    function obtenerOrdinal(numero) {
+      if (numero === 30) return "Final";
+      return ordinales[numero] || `Día ${numero}`;
+    }
+
+    function obtenerFase(dia, hora, minutos) {
+      const tiempo = hora * 60 + minutos;
+      const ordinal = obtenerOrdinal(dia);
+
+      if (ordinal === "Final") {
+        if (tiempo >= 300 && tiempo <= 600) return `Amanecer del Día Final`;
+        if (tiempo > 600 && tiempo <= 810) return `Mañana del Día Final`;
+        if (tiempo > 810 && tiempo <= 1199) return `Tarde del Día Final`;
+        if (tiempo >= 1200 && tiempo <= 1439) return `Noche del Día Final`;
+        return `Noche del Día Final`;
+      } else {
+        if (tiempo >= 300 && tiempo <= 600) return `Amanecer del ${ordinal} Día`;
+        if (tiempo > 600 && tiempo <= 810) return `Mañana del ${ordinal} Día`;
+        if (tiempo > 810 && tiempo <= 1199) return `Tarde del ${ordinal} Día`;
+        if (tiempo >= 1200 && tiempo <= 1439) return `Noche del ${ordinal} Día`;
+        return `Noche del ${obtenerOrdinal(dia + 1)} Día`;
+      }
+    }
+
+    function actualizarTiempo() {
+      const ahora = new Date();
+      const diferencia = Math.max(0, final - ahora.getTime());
+      const horasRestantes = Math.floor(diferencia / (1000 * 60 * 60));
+      const minutosRestantes = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+
+      const msDesdeInicio = ahora.getTime() - inicio;
+      const diasTranscurridos = Math.floor(msDesdeInicio / (1000 * 60 * 60 * 24));
+      const hora = ahora.getHours();
+      const minutos = ahora.getMinutes();
+
+      const dia = diasTranscurridos + 1;
+      document.getElementById("fase-dia").textContent = obtenerFase(dia, hora, minutos);
+      document.getElementById("tiempo-restante").textContent = `-Quedan ${horasRestantes.toString().padStart(2, '0')}:${minutosRestantes.toString().padStart(2, '0')} Horas-`;
+    }
+
+    actualizarTiempo();
+    setInterval(actualizarTiempo, 1000);
+  </script>
+</body>
+</html>
