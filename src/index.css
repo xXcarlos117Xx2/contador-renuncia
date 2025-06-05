@@ -1,0 +1,63 @@
+body {
+  margin: 0;
+  background: url('/town.png') no-repeat bottom center;
+  background-size: cover;
+  color: white;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+h1,
+h2 {
+  margin: 0.5em;
+  font-weight: bold;
+}
+#luna {
+  position: absolute;
+  top: -300px;
+  width: 150px;
+  z-index: 1;
+  transition: transform 0.2s linear;
+}
+#suelo {
+  position: absolute;
+  bottom: 0;
+  height: 120px;
+  width: 100%;
+  background: url('/town.png') no-repeat bottom center;
+  background-size: cover;
+  z-index: 0;
+}
+.debug_invisible {
+  display: none;
+}
+.temblor {
+  animation: shake 0.4s infinite;
+}
+@keyframes shake {
+  0% {
+    transform: translate(0px, 0px);
+  }
+  25% {
+    transform: translate(1px, -2px);
+  }
+  50% {
+    transform: translate(-1px, 1px);
+  }
+  75% {
+    transform: translate(2px, 2px);
+  }
+  100% {
+    transform: translate(-2px, 0px);
+  }
+}
+.ultimo-dia #mensaje-overlay h1,
+.ultimo-dia #mensaje-overlay h2 {
+  color: red !important;
+}
