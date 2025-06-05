@@ -7,7 +7,8 @@
   <style>
     body {
       margin: 0;
-      background-color: black;
+      background: url('town.png') no-repeat bottom center;
+      background-size: cover;
       color: white;
       font-family: Arial, sans-serif;
       display: flex;
@@ -16,52 +17,64 @@
       height: 100vh;
       text-align: center;
       flex-direction: column;
+      position: relative;
+      overflow: hidden;
     }
     h1, h2 {
       margin: 0.5em;
       font-weight: bold;
     }
+    #luna {
+      position: absolute;
+      top: -300px;
+      width: 150px;
+      z-index: 1;
+      transition: transform 0.2s linear;
+    }
+    #suelo {
+      position: absolute;
+      bottom: 0;
+      height: 120px;
+      width: 100%;
+      background: url('town.png') no-repeat bottom center;
+      background-size: cover;
+      z-index: 0;
+    }
+    .debug_invisible {
+      display: none;
+    }
+    .temblor {
+      animation: shake 0.4s infinite;
+    }
+    @keyframes shake {
+      0% { transform: translate(0px, 0px); }
+      25% { transform: translate(1px, -2px); }
+      50% { transform: translate(-1px, 1px); }
+      75% { transform: translate(2px, 2px); }
+      100% { transform: translate(-2px, 0px); }
+    }
+    .ultimo-dia #mensaje-overlay h1,
+    .ultimo-dia #mensaje-overlay h2 {
+      color: red !important;
+    }
   </style>
 </head>
 <body>
-  <h1 id="fase-dia">Amanecer del Primer Día</h1>
-  <h2 id="tiempo-restante">-Quedan 72:00:00 Horas-</h2>
+  <div id="mensaje-overlay" style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.6); padding: 20px 30px; border-radius: 10px; z-index: 3; display: flex; flex-direction: column; align-items: center;">
+    <h1 id="fase-dia" style="margin: 0.5em; font-weight: bold;">Amanecer del Primer Día</h1>
+    <h2 id="tiempo-restante" style="margin: 0.5em; font-weight: bold; position: relative;">
+      -Quedan 72:00:00 Horas-
+      <span style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; background: blue; border-radius: 2px;"></span>
+    </h2>
+  </div>
+  <img src="Moon.webp" id="luna" alt="Luna descendente" />
+  <div id="suelo"></div>
 
   <script>
-    const inicio = new Date("2025-06-04T00:00:00+02:00").getTime();
-    const final = new Date("2025-07-03T23:59:59+02:00").getTime();
+    const inicio = new Date("2025-06-04T08:30:00+02:00").getTime();
+    const final = new Date("2025-07-03T17:30:00+02:00").getTime();
 
-    const ordinales = {
-      1: "Primer",
-      2: "Segundo",
-      3: "Tercer",
-      4: "Cuarto",
-      5: "Quinto",
-      6: "Sexto",
-      7: "Séptimo",
-      8: "Octavo",
-      9: "Noveno",
-      10: "Décimo",
-      11: "Undécimo",
-      12: "Duodécimo",
-      13: "Decimotercer",
-      14: "Decimocuarto",
-      15: "Decimoquinto",
-      16: "Decimosexto",
-      17: "Decimoséptimo",
-      18: "Decimoctavo",
-      19: "Decimonoveno",
-      20: "Vigésimo",
-      21: "Vigésimo Primer",
-      22: "Vigésimo Segundo",
-      23: "Vigésimo Tercer",
-      24: "Vigésimo Cuarto",
-      25: "Vigésimo Quinto",
-      26: "Vigésimo Sexto",
-      27: "Vigésimo Séptimo",
-      28: "Vigésimo Octavo",
-      29: "Vigésimo Noveno"
-    };
+    const ordinales = { ...JSON.parse('{"1":"Primer","2":"Segundo","3":"Tercer","4":"Cuarto","5":"Quinto","6":"Sexto","7":"Séptimo","8":"Octavo","9":"Noveno","10":"Décimo","11":"Undécimo","12":"Duodécimo","13":"Decimotercer","14":"Decimocuarto","15":"Decimoquinto","16":"Decimosexto","17":"Decimoséptimo","18":"Decimoctavo","19":"Decimonoveno","20":"Vigésimo","21":"Vigésimo Primer","22":"Vigésimo Segundo","23":"Vigésimo Tercer","24":"Vigésimo Cuarto","25":"Vigésimo Quinto","26":"Vigésimo Sexto","27":"Vigésimo Séptimo","28":"Vigésimo Octavo","29":"Vigésimo Noveno"}') };
 
     function obtenerOrdinal(numero) {
       if (numero === 30) return "Final";
@@ -76,36 +89,75 @@
         if (tiempo >= 300 && tiempo <= 600) return `Amanecer del Día Final`;
         if (tiempo > 600 && tiempo <= 810) return `Mañana del Día Final`;
         if (tiempo > 810 && tiempo <= 1199) return `Tarde del Día Final`;
-        if (tiempo >= 1200 && tiempo <= 1439) return `Noche del Día Final`;
         return `Noche del Día Final`;
       } else {
         if (tiempo >= 300 && tiempo <= 600) return `Amanecer del ${ordinal} Día`;
         if (tiempo > 600 && tiempo <= 810) return `Mañana del ${ordinal} Día`;
         if (tiempo > 810 && tiempo <= 1199) return `Tarde del ${ordinal} Día`;
-        if (tiempo >= 1200 && tiempo <= 1439) return `Noche del ${ordinal} Día`;
         return `Noche del ${obtenerOrdinal(dia + 1)} Día`;
       }
     }
 
+    const DEBUG_OVERRIDE = false;
+    let ultimoTemblor = 0;
+
     function actualizarTiempo() {
+      const body = document.body;
       const ahora = new Date();
+      const debugSlider = document.getElementById("debug-slider");
+      let porcentaje = (ahora.getTime() - inicio) / (final - inicio);
+      let dia;
+
+      if (DEBUG_OVERRIDE && debugSlider) {
+        debugSlider.classList.remove("debug_invisible");
+        document.getElementById("debug-percent").classList.remove("debug_invisible");
+        porcentaje = parseFloat(debugSlider.value);
+        dia = Math.floor((final - inicio) * porcentaje / (1000 * 60 * 60 * 24)) + 1;
+        const ordinalDebug = obtenerOrdinal(dia);
+        document.getElementById("debug-percent").textContent = `${(porcentaje * 100).toFixed(1)}% → Día ${ordinalDebug}`;
+      } else {
+        const msDesdeInicio = ahora.getTime() - inicio;
+        const diasTranscurridos = Math.floor(msDesdeInicio / (1000 * 60 * 60 * 24));
+        dia = diasTranscurridos + 1;
+      }
+
+      body.classList.remove("temblor", "ultimo-dia");
+
+      if (dia >= 28 && dia <= 30) {
+        const ahoraSegundos = Date.now();
+        if (ahoraSegundos - ultimoTemblor > 30000) {
+          body.classList.add("temblor");
+          setTimeout(() => body.classList.remove("temblor"), 1000);
+          ultimoTemblor = ahoraSegundos;
+        }
+      }
+
+      if (dia === 30) body.classList.add("ultimo-dia");
+
+      const hora = ahora.getHours();
+      const minutosAhora = ahora.getMinutes();
+      document.getElementById("fase-dia").textContent = obtenerFase(dia, hora, minutosAhora);
       const diferencia = Math.max(0, final - ahora.getTime());
       const horas = Math.floor(diferencia / (1000 * 60 * 60));
       const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
       const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
-
-      const msDesdeInicio = ahora.getTime() - inicio;
-      const diasTranscurridos = Math.floor(msDesdeInicio / (1000 * 60 * 60 * 24));
-      const hora = ahora.getHours();
-      const minutosAhora = ahora.getMinutes();
-
-      const dia = diasTranscurridos + 1;
-      document.getElementById("fase-dia").textContent = obtenerFase(dia, hora, minutosAhora);
       document.getElementById("tiempo-restante").textContent = `-Quedan ${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')} Horas-`;
+
+      const luna = document.getElementById("luna");
+      const escala = 1 + porcentaje * 10;
+      const desplazamiento = Math.max(0, porcentaje * 100);
+      luna.style.transform = `scale(${escala}) translateY(${desplazamiento}px)`;
     }
 
     actualizarTiempo();
     setInterval(actualizarTiempo, 1000);
+
+    if (!DEBUG_OVERRIDE) {
+      document.querySelectorAll('.debug_invisible').forEach(e => e.remove());
+    }
   </script>
+
+  <input type="range" id="debug-slider" min="0" max="1" step="0.001" class="debug_invisible" style="position: absolute; top: 10px; left: 10px; width: 200px; z-index: 99;">
+  <div id="debug-percent" class="debug_invisible" style="position: absolute; top: 10px; left: 220px; color: white; font-family: monospace; z-index: 99;">0%</div>
 </body>
 </html>
